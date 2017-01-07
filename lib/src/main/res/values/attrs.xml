@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="LoadingButton">
+        <attr name="lb_color" format="color" />
+        <attr name="lb_progress_color" format="color" />
+        <attr name="lb_init_text" format="string" />
+        <attr name="lb_success_text" format="string" />
+        <attr name="lb_failure_text" format="string" />
+    </declare-styleable>
+</resources>
