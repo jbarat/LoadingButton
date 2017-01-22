@@ -1,13 +1,16 @@
 package com.jbarat.loadingbutton.demo;
 
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.Button;
 
 import com.jbarat.LoadingButton;
 import com.jbarat.loadingbutton.R;
 
 import static android.view.View.VISIBLE;
+import static android.widget.Toast.LENGTH_SHORT;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -16,11 +19,12 @@ public class MainActivity extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		View content = findViewById(R.id.activity_main);
 		LoadingButton loadingButton = (LoadingButton) findViewById(R.id.button);
 		Button successButton = (Button) findViewById(R.id.button2);
 		Button failButton = (Button) findViewById(R.id.button3);
 
-		loadingButton.setOnClickListener(v -> {
+		loadingButton.setOnInitialClickListener(v -> {
 			successButton.setVisibility(VISIBLE);
 			failButton.setVisibility(VISIBLE);
 		});
@@ -28,16 +32,7 @@ public class MainActivity extends AppCompatActivity {
 		successButton.setOnClickListener(v -> loadingButton.success());
 		failButton.setOnClickListener(v -> loadingButton.failure());
 
-		LoadingButton loadingButton2 = (LoadingButton) findViewById(R.id.button4);
-		Button successButton2 = (Button) findViewById(R.id.button5);
-		Button failButton2 = (Button) findViewById(R.id.button6);
-
-		loadingButton2.setOnClickListener(v -> {
-			successButton2.setVisibility(VISIBLE);
-			failButton2.setVisibility(VISIBLE);
-		});
-
-		successButton2.setOnClickListener(v -> loadingButton2.success());
-		failButton2.setOnClickListener(v -> loadingButton2.failure());
+		loadingButton.setOnSuccessClickListener(view -> Snackbar.make(content, "Success Clicked", LENGTH_SHORT).show());
+		loadingButton.setOnFailOnClickListener(view -> Snackbar.make(content, "Fail Clicked", LENGTH_SHORT).show());
 	}
 }

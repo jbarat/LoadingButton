@@ -22,202 +22,285 @@ import com.jbarat.lib.R;
 import static android.animation.ValueAnimator.ofFloat;
 import static com.jbarat.LoadingButton.State.Fail;
 import static com.jbarat.LoadingButton.State.InProgress;
+import static com.jbarat.LoadingButton.State.InProgressAfterFailResult;
+import static com.jbarat.LoadingButton.State.InProgressAfterSuccessResult;
 import static com.jbarat.LoadingButton.State.Initial;
 import static com.jbarat.LoadingButton.State.Success;
 
 public class LoadingButton extends FrameLayout {
 
-    enum State {Initial, InProgress, Fail, Success}
+	enum State {Initial, InProgress, InProgressAfterSuccessResult, InProgressAfterFailResult, Fail, Success}
 
-    private ImageView circleResult;
-    private ProgressBar progress;
-    private Button button;
-    private ImageView circle;
-    private TextView resultText;
+	private State state;
 
-    private State state;
+	private LoadingButtonInitialOnClickListener loadingButtonInitialOnClickListener;
+	private LoadingButtonSuccessOnClickListener loadingButtonSuccessOnClickListener;
+	private LoadingButtonFailOnClickListener loadingButtonFailOnClickListener;
 
-    private String successText;
-    private String failText;
+	private ImageView circleResult;
+	private ProgressBar progress;
+	private Button button;
+	private ImageView circle;
+	private TextView resultText;
 
-    public LoadingButton(Context context) {
-        super(context);
-        init(context, null);
-    }
+	private String successText;
+	private String failText;
 
-    public LoadingButton(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(context, attrs);
-    }
+	float originalResultTextX;
+	float originalCircleResultX;
 
-    public LoadingButton(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context, attrs);
-    }
+	public LoadingButton(Context context) {
+		super(context);
+		init(context, null);
+	}
 
-    private void init(Context context, AttributeSet attrs) {
-        LayoutInflater inflater = (LayoutInflater) context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        inflater.inflate(R.layout.loading_button, this, true);
+	public LoadingButton(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		init(context, attrs);
+	}
 
-        button = (Button) findViewById(R.id.loading_button);
-        circle = (ImageView) findViewById(R.id.circle);
-        circleResult = (ImageView) findViewById(R.id.circle_result);
-        progress = (ProgressBar) findViewById(R.id.progress);
-        resultText = (TextView) findViewById(R.id.result);
+	public LoadingButton(Context context, AttributeSet attrs, int defStyleAttr) {
+		super(context, attrs, defStyleAttr);
+		init(context, attrs);
+	}
 
-        button.setOnClickListener(new ButtonOnClickListener());
+	public void setOnInitialClickListener(LoadingButtonInitialOnClickListener listener) {
+		this.loadingButtonInitialOnClickListener = listener;
+	}
 
-        circle.setMinimumHeight(button.getHeight());
-        circle.setMinimumWidth(button.getWidth());
+	public void setOnSuccessClickListener(LoadingButtonSuccessOnClickListener listener) {
+		this.loadingButtonSuccessOnClickListener = listener;
+	}
 
-        state = Initial;
+	public void setOnFailOnClickListener(LoadingButtonFailOnClickListener listener) {
+		this.loadingButtonFailOnClickListener = listener;
+	}
 
-        initAttributes(context, attrs);
-    }
+	public void success() {
+		if (!isInProgressOrFinished()) {
+			state = InProgressAfterSuccessResult;
 
-    private void initAttributes(Context context, AttributeSet attrs) {
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.LoadingButton);
+			ValueAnimator va = ofFloat(0, 1);
+			va.setDuration(500);
+			va.addUpdateListener(new CircleToResultCircleFadeAlphaFadeAnimatorUpdateListener());
+			va.addListener(new CircleToResultCircleWithTextAnimatorListener());
+			va.start();
 
-        int primaryColor = typedArray.getColor(R.styleable.LoadingButton_lb_color, Color.GRAY);
-        button.setBackgroundColor(primaryColor);
-        circle.setColorFilter(primaryColor);
+			progress.setVisibility(GONE);
+			circleResult.setImageResource(R.drawable.ic_check_circle);
+			circleResult.setColorFilter(Color.GREEN);
+			resultText.setText(successText);
+		}
+	}
 
-        int progressColor = typedArray.getColor(R.styleable.LoadingButton_lb_progress_color, Color.BLUE);
-        progress.getIndeterminateDrawable().setColorFilter(progressColor, PorterDuff.Mode.MULTIPLY);
+	public void failure() {
+		if (!isInProgressOrFinished()) {
+			state = InProgressAfterFailResult;
 
-        String initText = typedArray.getString(R.styleable.LoadingButton_lb_init_text);
-        button.setText(initText);
+			ValueAnimator va = ofFloat(0, 1);
+			va.setDuration(500);
+			va.addUpdateListener(new CircleToResultCircleFadeAlphaFadeAnimatorUpdateListener());
+			va.addListener(new CircleToResultCircleWithTextAnimatorListener());
+			va.start();
 
-        successText = typedArray.getString(R.styleable.LoadingButton_lb_success_text);
-        failText = typedArray.getString(R.styleable.LoadingButton_lb_failure_text);
+			progress.setVisibility(GONE);
+			circleResult.setImageResource(R.drawable.ic_cancel_circle);
+			circleResult.setColorFilter(Color.RED);
+			resultText.setText(failText);
+		}
+	}
 
-        typedArray.recycle();
-    }
+	private void init(Context context, AttributeSet attrs) {
+		LayoutInflater inflater = (LayoutInflater) context
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		inflater.inflate(R.layout.loading_button, this, true);
 
-    public void success() {
-        if (state != Success) {
-            state = Success;
+		button = (Button) findViewById(R.id.loading_button);
+		circle = (ImageView) findViewById(R.id.circle);
+		circleResult = (ImageView) findViewById(R.id.circle_result);
+		progress = (ProgressBar) findViewById(R.id.progress);
+		resultText = (TextView) findViewById(R.id.result);
 
-            ValueAnimator va = ofFloat(0, 1);
-            va.setDuration(500);
-            va.addUpdateListener(new CircleToResultCircleFadeAlphaFadeAnimatorUpdateListener());
-            va.addListener(new CircleToResultCircleWithTextAnimatorListener());
-            va.start();
+		button.setOnClickListener(new ButtonOnClickListener());
+		circleResult.setOnClickListener(new ResultOnClickListener());
+		resultText.setOnClickListener(new ResultOnClickListener());
 
-            progress.setVisibility(GONE);
-            circleResult.setImageResource(R.drawable.ic_check_circle);
-            circleResult.setColorFilter(Color.GREEN);
-            resultText.setText(successText);
-        }
-    }
+		circle.setMinimumHeight(button.getHeight());
+		circle.setMinimumWidth(button.getWidth());
 
-    public void failure() {
-        if (state != Fail) {
-            state = Fail;
+		state = Initial;
 
-            ValueAnimator va = ofFloat(0, 1);
-            va.setDuration(500);
-            va.addUpdateListener(new CircleToResultCircleFadeAlphaFadeAnimatorUpdateListener());
-            va.addListener(new CircleToResultCircleWithTextAnimatorListener());
-            va.start();
+		initAttributes(context, attrs);
+	}
 
-            progress.setVisibility(GONE);
-            circleResult.setImageResource(R.drawable.ic_cancel_circle);
-            circleResult.setColorFilter(Color.RED);
-            resultText.setText(failText);
-        }
-    }
+	private void initAttributes(Context context, AttributeSet attrs) {
+		TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.LoadingButton);
 
-    private class ButtonOnClickListener implements OnClickListener {
-        @Override
-        public void onClick(View v) {
-            if (state == Initial) {
-                state = InProgress;
-                button.setText("");
-                LoadingButton.this.callOnClick();
+		int primaryColor = typedArray.getColor(R.styleable.LoadingButton_lb_color, Color.GRAY);
+		button.setBackgroundColor(primaryColor);
+		circle.setColorFilter(primaryColor);
 
-                Animator circularReveal = ViewAnimationUtils.createCircularReveal(button,
-                        (int) button.getPivotX(),
-                        (int) button.getPivotY(),
-                        button.getWidth(),
-                        0);
-                circularReveal.addListener(new ButtonToCircleAnimationListener());
-                circularReveal.setDuration(800).start();
-            }
-        }
-    }
+		int progressColor = typedArray.getColor(R.styleable.LoadingButton_lb_progress_color, Color.BLUE);
+		progress.getIndeterminateDrawable().setColorFilter(progressColor, PorterDuff.Mode.MULTIPLY);
 
-    private class ButtonToCircleAnimationListener implements AnimatorListener {
-        @Override
-        public void onAnimationStart(Animator animation) {
+		String initText = typedArray.getString(R.styleable.LoadingButton_lb_init_text);
+		button.setText(initText);
 
-        }
+		successText = typedArray.getString(R.styleable.LoadingButton_lb_success_text);
+		failText = typedArray.getString(R.styleable.LoadingButton_lb_failure_text);
 
-        @Override
-        public void onAnimationEnd(Animator animation) {
-            button.setVisibility(GONE);
-            progress.setVisibility(VISIBLE);
-            progress.setProgress(0);
-        }
+		typedArray.recycle();
+	}
 
-        @Override
-        public void onAnimationCancel(Animator animation) {
+	private void returnToInProgress() {
+		state = InProgress;
 
-        }
+		//TODO
+		resultText.setAlpha(0);
+		resultText.setX(originalResultTextX);
+		circleResult.setX(originalCircleResultX);
 
-        @Override
-        public void onAnimationRepeat(Animator animation) {
+		progress.setVisibility(VISIBLE);
+		circleResult.setColorFilter(Color.RED);
+		resultText.setText("");
+	}
 
-        }
-    }
+	private boolean isInProgressOrFinished() {
+		return state == Success || state == Fail || state == InProgressAfterSuccessResult || state == InProgressAfterFailResult;
+	}
 
-    private class CircleToResultCircleFadeAlphaFadeAnimatorUpdateListener implements ValueAnimator.AnimatorUpdateListener {
-        @Override
-        public void onAnimationUpdate(ValueAnimator animation) {
-            float value = (float) animation.getAnimatedValue();
-            circle.setAlpha(1 - value);
-            circleResult.setAlpha(value);
-        }
-    }
+	private class ButtonOnClickListener implements OnClickListener {
+		@Override
+		public void onClick(View v) {
+			if (state == Initial) {
+				state = InProgress;
+				button.setText("");
+				loadingButtonInitialOnClickListener.onClick(LoadingButton.this);
 
-    private class CircleToResultCircleWithTextAnimatorListener implements AnimatorListener {
-        @Override
-        public void onAnimationStart(Animator animation) {
+				Animator circularReveal = ViewAnimationUtils.createCircularReveal(button,
+						(int) button.getPivotX(),
+						(int) button.getPivotY(),
+						button.getWidth(),
+						0);
+				circularReveal.addListener(new ButtonToCircleAnimationListener());
+				circularReveal.setDuration(800).start();
+			}
+		}
+	}
 
-        }
+	private class ButtonToCircleAnimationListener implements AnimatorListener {
+		@Override
+		public void onAnimationStart(Animator animation) {
 
-        @Override
-        public void onAnimationEnd(Animator animation) {
-            final float originalResultTextX = resultText.getX();
-            final float originalCircleResultX = circleResult.getX();
-            final float circleHalfWidth = circle.getHeight() / 2;
-            // TODO 56 is a magic number
-            final float newCircleResultX = (circleResult.getPivotX() - circleHalfWidth) -
-                    (originalResultTextX - circleHalfWidth) + 56;
+		}
 
-            ValueAnimator va = ofFloat(0, 1);
-            va.setDuration(500);
-            va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation1) {
-                    float value = (float) animation1.getAnimatedValue();
-                    resultText.setAlpha(value);
-                    resultText.setX(originalResultTextX + (circleHalfWidth * value));
-                    circleResult.setX(originalCircleResultX - (newCircleResultX * value));
-                }
-            });
-            va.start();
-        }
+		@Override
+		public void onAnimationEnd(Animator animation) {
+			button.setVisibility(GONE);
+			progress.setVisibility(VISIBLE);
+			progress.setProgress(0);
+		}
 
-        @Override
-        public void onAnimationCancel(Animator animation) {
+		@Override
+		public void onAnimationCancel(Animator animation) {
 
-        }
+		}
 
-        @Override
-        public void onAnimationRepeat(Animator animation) {
+		@Override
+		public void onAnimationRepeat(Animator animation) {
 
-        }
-    }
+		}
+	}
+
+	private class CircleToResultCircleFadeAlphaFadeAnimatorUpdateListener implements ValueAnimator.AnimatorUpdateListener {
+		@Override
+		public void onAnimationUpdate(ValueAnimator animation) {
+			float value = (float) animation.getAnimatedValue();
+			circle.setAlpha(1 - value);
+			circleResult.setAlpha(value);
+		}
+	}
+
+	private class CircleToResultCircleWithTextAnimatorListener implements AnimatorListener {
+		@Override
+		public void onAnimationStart(Animator animation) {
+
+		}
+
+		@Override
+		public void onAnimationEnd(Animator animation) {
+			originalResultTextX = resultText.getX();
+			originalCircleResultX = circleResult.getX();
+			final float circleHalfWidth = circle.getHeight() / 2;
+			// TODO 56 is a magic number
+			final float newCircleResultX = (circleResult.getPivotX() - circleHalfWidth) -
+					(originalResultTextX - circleHalfWidth) + 56;
+
+			ValueAnimator va = ofFloat(0, 1);
+			va.setDuration(500);
+			va.addListener(new ResultToFinalStateAnimatorListener());
+			va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+				@Override
+				public void onAnimationUpdate(ValueAnimator animation1) {
+					float value = (float) animation1.getAnimatedValue();
+					resultText.setAlpha(value);
+					resultText.setX(originalResultTextX + (circleHalfWidth * value));
+					circleResult.setX(originalCircleResultX - (newCircleResultX * value));
+				}
+			});
+			va.start();
+		}
+
+		@Override
+		public void onAnimationCancel(Animator animation) {
+
+		}
+
+		@Override
+		public void onAnimationRepeat(Animator animation) {
+
+		}
+	}
+
+	private class ResultToFinalStateAnimatorListener implements AnimatorListener {
+		@Override
+		public void onAnimationStart(Animator animation) {
+
+		}
+
+		@Override
+		public void onAnimationEnd(Animator animation) {
+			if (state == InProgressAfterFailResult) {
+				state = Fail;
+			}else if(state == InProgressAfterSuccessResult){
+				state = Success;
+			}
+		}
+
+		@Override
+		public void onAnimationCancel(Animator animation) {
+
+		}
+
+		@Override
+		public void onAnimationRepeat(Animator animation) {
+
+		}
+	}
+
+	private class ResultOnClickListener implements OnClickListener {
+
+		@Override
+		public void onClick(View v) {
+			if (state == Success || state == Fail) {
+				if (state == Success) {
+					loadingButtonSuccessOnClickListener.onClick(LoadingButton.this);
+				} else {
+					loadingButtonFailOnClickListener.onClick(LoadingButton.this);
+				}
+
+				LoadingButton.this.returnToInProgress();
+			}
+		}
+	}
 }
