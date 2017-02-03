@@ -61,8 +61,9 @@ public class LoadingButton extends FrameLayout {
     private String successText;
     private String failText;
 
-    float originalResultTextX;
-    float originalCircleResultX;
+    private float originalResultTextX;
+    private float originalCircleResultX;
+    private float newCircleResultX;
 
     public LoadingButton(Context context) {
         super(context);
@@ -97,7 +98,7 @@ public class LoadingButton extends FrameLayout {
 
             ValueAnimator va = ofFloat(0, 1);
             va.setDuration(500);
-            va.addUpdateListener(new CircleToResultCircleFadeAlphaFadeAnimatorUpdateListener());
+            va.addUpdateListener(new CircleAndResultCircleAlphaAnimatorUpdateListener());
             va.addListener(new CircleToResultCircleWithTextAnimatorListener());
             va.start();
 
@@ -114,7 +115,7 @@ public class LoadingButton extends FrameLayout {
 
             ValueAnimator va = ofFloat(0, 1);
             va.setDuration(500);
-            va.addUpdateListener(new CircleToResultCircleFadeAlphaFadeAnimatorUpdateListener());
+            va.addUpdateListener(new CircleAndResultCircleAlphaAnimatorUpdateListener());
             va.addListener(new CircleToResultCircleWithTextAnimatorListener());
             va.start();
 
@@ -170,14 +171,35 @@ public class LoadingButton extends FrameLayout {
     private void returnToInProgress() {
         state = InProgress;
 
-        //TODO
-        resultText.setAlpha(0);
-        resultText.setX(originalResultTextX);
-        circleResult.setX(originalCircleResultX);
+        ValueAnimator va = ofFloat(1, 0);
+        va.setDuration(500);
+        va.addUpdateListener(new MoveResultTextAndCircleAnimatorUpdateListener());
+        va.addListener(new AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
 
-        progress.setVisibility(VISIBLE);
-        circleResult.setColorFilter(Color.RED);
-        resultText.setText("");
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                ValueAnimator va = ofFloat(1, 0);
+                va.setDuration(500);
+                va.addUpdateListener(new CircleAndResultCircleAlphaAnimatorUpdateListener());
+                va.addListener(new ShowProgressBarOnFinishAnimationListener());
+                va.start();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        va.start();
     }
 
     private boolean isInProgressOrFinished() {
@@ -197,13 +219,13 @@ public class LoadingButton extends FrameLayout {
                         (int) button.getPivotY(),
                         button.getWidth(),
                         0);
-                circularReveal.addListener(new ButtonToCircleAnimationListener());
+                circularReveal.addListener(new ShowProgressBarOnFinishAnimationListener());
                 circularReveal.setDuration(800).start();
             }
         }
     }
 
-    private class ButtonToCircleAnimationListener implements AnimatorListener {
+    private class ShowProgressBarOnFinishAnimationListener implements AnimatorListener {
         @Override
         public void onAnimationStart(Animator animation) {
 
@@ -227,7 +249,7 @@ public class LoadingButton extends FrameLayout {
         }
     }
 
-    private class CircleToResultCircleFadeAlphaFadeAnimatorUpdateListener implements ValueAnimator.AnimatorUpdateListener {
+    private class CircleAndResultCircleAlphaAnimatorUpdateListener implements ValueAnimator.AnimatorUpdateListener {
         @Override
         public void onAnimationUpdate(ValueAnimator animation) {
             float value = (float) animation.getAnimatedValue();
@@ -248,18 +270,13 @@ public class LoadingButton extends FrameLayout {
             originalCircleResultX = circleResult.getX();
             final float circleHalfWidth = circle.getHeight() / 2;
             // TODO 56 is a magic number
-            final float newCircleResultX = (circleResult.getPivotX() - circleHalfWidth) -
+            newCircleResultX = (circleResult.getPivotX() - circleHalfWidth) -
                     (originalResultTextX - circleHalfWidth) + 56;
 
             ValueAnimator va = ofFloat(0, 1);
             va.setDuration(500);
             va.addListener(new ResultToFinalStateAnimatorListener());
-            va.addUpdateListener(animation1 -> {
-                float value = (float) animation1.getAnimatedValue();
-                resultText.setAlpha(value);
-                resultText.setX(originalResultTextX + (circleHalfWidth * value));
-                circleResult.setX(originalCircleResultX - (newCircleResultX * value));
-            });
+            va.addUpdateListener(new MoveResultTextAndCircleAnimatorUpdateListener());
             va.start();
         }
 
@@ -313,6 +330,17 @@ public class LoadingButton extends FrameLayout {
 
                 LoadingButton.this.returnToInProgress();
             }
+        }
+    }
+
+    private class MoveResultTextAndCircleAnimatorUpdateListener implements ValueAnimator.AnimatorUpdateListener {
+
+        @Override
+        public void onAnimationUpdate(ValueAnimator animation) {
+            float value = (float) animation.getAnimatedValue();
+            resultText.setAlpha(value);
+            resultText.setX(originalResultTextX + (circle.getHeight() / 2 * value));
+            circleResult.setX(originalCircleResultX - (newCircleResultX * value));
         }
     }
 }
