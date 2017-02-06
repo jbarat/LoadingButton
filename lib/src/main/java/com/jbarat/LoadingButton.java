@@ -16,7 +16,7 @@
 package com.jbarat;
 
 import android.animation.Animator;
-import android.animation.Animator.AnimatorListener;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -174,11 +174,7 @@ public class LoadingButton extends FrameLayout {
         ValueAnimator va = ofFloat(1, 0);
         va.setDuration(500);
         va.addUpdateListener(new MoveResultTextAndCircleAnimatorUpdateListener());
-        va.addListener(new AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-
-            }
+        va.addListener(new AnimatorListenerAdapter() {
 
             @Override
             public void onAnimationEnd(Animator animation) {
@@ -189,15 +185,6 @@ public class LoadingButton extends FrameLayout {
                 va.start();
             }
 
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
         });
         va.start();
     }
@@ -207,6 +194,7 @@ public class LoadingButton extends FrameLayout {
     }
 
     private class ButtonOnClickListener implements OnClickListener {
+
         @Override
         public void onClick(View v) {
             if (state == Initial) {
@@ -225,27 +213,13 @@ public class LoadingButton extends FrameLayout {
         }
     }
 
-    private class ShowProgressBarOnFinishAnimationListener implements AnimatorListener {
-        @Override
-        public void onAnimationStart(Animator animation) {
-
-        }
+    private class ShowProgressBarOnFinishAnimationListener extends AnimatorListenerAdapter {
 
         @Override
         public void onAnimationEnd(Animator animation) {
             button.setVisibility(GONE);
             progress.setVisibility(VISIBLE);
             progress.setProgress(0);
-        }
-
-        @Override
-        public void onAnimationCancel(Animator animation) {
-
-        }
-
-        @Override
-        public void onAnimationRepeat(Animator animation) {
-
         }
     }
 
@@ -258,11 +232,7 @@ public class LoadingButton extends FrameLayout {
         }
     }
 
-    private class CircleToResultCircleWithTextAnimatorListener implements AnimatorListener {
-        @Override
-        public void onAnimationStart(Animator animation) {
-
-        }
+    private class CircleToResultCircleWithTextAnimatorListener extends AnimatorListenerAdapter {
 
         @Override
         public void onAnimationEnd(Animator animation) {
@@ -279,23 +249,9 @@ public class LoadingButton extends FrameLayout {
             va.addUpdateListener(new MoveResultTextAndCircleAnimatorUpdateListener());
             va.start();
         }
-
-        @Override
-        public void onAnimationCancel(Animator animation) {
-
-        }
-
-        @Override
-        public void onAnimationRepeat(Animator animation) {
-
-        }
     }
 
-    private class ResultToFinalStateAnimatorListener implements AnimatorListener {
-        @Override
-        public void onAnimationStart(Animator animation) {
-
-        }
+    private class ResultToFinalStateAnimatorListener extends AnimatorListenerAdapter {
 
         @Override
         public void onAnimationEnd(Animator animation) {
@@ -304,16 +260,6 @@ public class LoadingButton extends FrameLayout {
             } else if (state == InProgressAfterSuccessResult) {
                 state = Success;
             }
-        }
-
-        @Override
-        public void onAnimationCancel(Animator animation) {
-
-        }
-
-        @Override
-        public void onAnimationRepeat(Animator animation) {
-
         }
     }
 
