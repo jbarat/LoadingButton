@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">LoadingButton</string>
+    <string name="button.fail">Fail Callback</string>
+    <string name="button.success">Success Callback</string>
+    <string name="button.loading.init">Push Me!</string>
+    <string name="button.loading.fail">Fail!</string>
+    <string name="button.loading.success">Great Success!</string>
 </resources>

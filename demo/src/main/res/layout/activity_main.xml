@@ -10,7 +10,7 @@
     tools:context="com.jbarat.loadingbutton.demo.MainActivity">
 
     <com.jbarat.LoadingButton
-        android:id="@+id/button"
+        android:id="@+id/loadingButton"
         android:layout_width="0dp"
         android:layout_height="80dp"
         android:layout_marginEnd="8dp"
@@ -22,25 +22,28 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:lb_color="@color/colorPrimary"
-        app:lb_failure_text="Fail!"
-        app:lb_init_text="Push Me!"
-        app:lb_progress_color="@color/colorAccent"
-        app:lb_success_text="Great Success!"/>
+        app:lb_init_text="@string/button.loading.init"
+        app:lb_success_text="@string/button.loading.success"
+        app:lb_failure_text="@string/button.loading.fail"
+        app:lb_anim_duration="500"
+        app:lb_success_color="#2ac500"
+        app:lb_failure_color="#ff2700"
+        app:lb_progress_color="@color/colorAccent"/>
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/successButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:text="Success Callback"
+        android:text="@string/button.success"
         android:visibility="invisible"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button"/>
+        app:layout_constraintTop_toBottomOf="@+id/loadingButton"/>
 
     <Button
-        android:id="@+id/button3"
+        android:id="@+id/failButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
@@ -48,11 +51,11 @@
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:text="Fail Callback"
+        android:text="@string/button.fail"
         android:visibility="invisible"
         app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintLeft_toRightOf="@+id/button2"
+        app:layout_constraintLeft_toRightOf="@+id/successButton"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button"/>
+        app:layout_constraintTop_toBottomOf="@+id/loadingButton"/>
 
 </android.support.constraint.ConstraintLayout>

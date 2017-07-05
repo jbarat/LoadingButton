@@ -24,30 +24,56 @@ import android.widget.Button;
 import com.jbarat.LoadingButton;
 import com.jbarat.loadingbutton.R;
 
+import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 import static android.widget.Toast.LENGTH_SHORT;
 
 public class MainActivity extends AppCompatActivity {
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+    private Button successButton;
+    private Button failButton;
 
-		View content = findViewById(R.id.activity_main);
-		LoadingButton loadingButton = (LoadingButton) findViewById(R.id.button);
-		Button successButton = (Button) findViewById(R.id.button2);
-		Button failButton = (Button) findViewById(R.id.button3);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-		loadingButton.setOnInitialClickListener(v -> {
-			successButton.setVisibility(VISIBLE);
-			failButton.setVisibility(VISIBLE);
-		});
+        View content = findViewById(R.id.activity_main);
+        LoadingButton loadingButton = (LoadingButton) findViewById(R.id.loadingButton);
+        successButton = (Button) findViewById(R.id.successButton);
+        failButton = (Button) findViewById(R.id.failButton);
 
-		successButton.setOnClickListener(v -> loadingButton.success());
-		failButton.setOnClickListener(v -> loadingButton.failure());
+        loadingButton.setOnInitialClickListener(v -> {
+            successButton.setVisibility(VISIBLE);
+            failButton.setVisibility(VISIBLE);
+        });
 
-		loadingButton.setOnSuccessClickListener(view -> Snackbar.make(content, "Success Clicked", LENGTH_SHORT).show());
-		loadingButton.setOnFailOnClickListener(view -> Snackbar.make(content, "Fail Clicked", LENGTH_SHORT).show());
-	}
+        successButton.setOnClickListener(v -> {
+            loadingButton.success();
+            hideButtons();
+        });
+        failButton.setOnClickListener(v -> {
+            loadingButton.failure();
+            hideButtons();
+        });
+
+        loadingButton.setOnSuccessClickListener(view -> {
+            Snackbar.make(content, "Success Clicked", LENGTH_SHORT).show();
+            showButtons();
+        });
+        loadingButton.setOnFailOnClickListener(view -> {
+            Snackbar.make(content, "Fail Clicked", LENGTH_SHORT).show();
+            showButtons();
+        });
+    }
+
+    private void showButtons() {
+        successButton.setVisibility(VISIBLE);
+        failButton.setVisibility(VISIBLE);
+    }
+
+    private void hideButtons() {
+        successButton.setVisibility(INVISIBLE);
+        failButton.setVisibility(INVISIBLE);
+    }
 }

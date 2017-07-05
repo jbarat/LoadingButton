@@ -6,5 +6,8 @@
         <attr name="lb_init_text" format="string" />
         <attr name="lb_success_text" format="string" />
         <attr name="lb_failure_text" format="string" />
+        <attr name="lb_success_color" format="color" />
+        <attr name="lb_failure_color" format="color" />
+        <attr name="lb_anim_duration" format="integer" />
     </declare-styleable>
 </resources>

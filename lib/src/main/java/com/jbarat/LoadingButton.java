@@ -46,6 +46,8 @@ public class LoadingButton extends FrameLayout {
 
     enum State {Initial, InProgress, InProgressAfterSuccessResult, InProgressAfterFailResult, Fail, Success}
 
+    private static final int CIRCLE_TO_TEXT_DURATION_DEFAULT = 500;
+
     private State state;
 
     private LoadingButtonInitialOnClickListener loadingButtonInitialOnClickListener;
@@ -57,6 +59,10 @@ public class LoadingButton extends FrameLayout {
     private Button button;
     private ImageView circle;
     private TextView resultText;
+
+    private int circleToTextDuration;
+    private int failColor;
+    private int successColor;
 
     private String successText;
     private String failText;
@@ -97,14 +103,14 @@ public class LoadingButton extends FrameLayout {
             state = InProgressAfterSuccessResult;
 
             ValueAnimator va = ofFloat(0, 1);
-            va.setDuration(500);
+            va.setDuration(circleToTextDuration);
             va.addUpdateListener(new CircleAndResultCircleAlphaAnimatorUpdateListener());
             va.addListener(new CircleToResultCircleWithTextAnimatorListener());
             va.start();
 
             progress.setVisibility(GONE);
             circleResult.setImageResource(R.drawable.ic_check_circle);
-            circleResult.setColorFilter(Color.GREEN);
+            circleResult.setColorFilter(successColor);
             resultText.setText(successText);
         }
     }
@@ -114,14 +120,14 @@ public class LoadingButton extends FrameLayout {
             state = InProgressAfterFailResult;
 
             ValueAnimator va = ofFloat(0, 1);
-            va.setDuration(500);
+            va.setDuration(circleToTextDuration);
             va.addUpdateListener(new CircleAndResultCircleAlphaAnimatorUpdateListener());
             va.addListener(new CircleToResultCircleWithTextAnimatorListener());
             va.start();
 
             progress.setVisibility(GONE);
             circleResult.setImageResource(R.drawable.ic_cancel_circle);
-            circleResult.setColorFilter(Color.RED);
+            circleResult.setColorFilter(failColor);
             resultText.setText(failText);
         }
     }
@@ -165,6 +171,10 @@ public class LoadingButton extends FrameLayout {
         successText = typedArray.getString(R.styleable.LoadingButton_lb_success_text);
         failText = typedArray.getString(R.styleable.LoadingButton_lb_failure_text);
 
+        failColor= typedArray.getColor(R.styleable.LoadingButton_lb_failure_color,Color.RED);
+        successColor= typedArray.getColor(R.styleable.LoadingButton_lb_success_color,Color.GREEN);
+
+        circleToTextDuration = typedArray.getInteger(R.styleable.LoadingButton_lb_anim_duration, CIRCLE_TO_TEXT_DURATION_DEFAULT);
         typedArray.recycle();
     }
 
@@ -172,14 +182,14 @@ public class LoadingButton extends FrameLayout {
         state = InProgress;
 
         ValueAnimator va = ofFloat(1, 0);
-        va.setDuration(500);
+        va.setDuration(circleToTextDuration);
         va.addUpdateListener(new MoveResultTextAndCircleAnimatorUpdateListener());
         va.addListener(new AnimatorListenerAdapter() {
 
             @Override
             public void onAnimationEnd(Animator animation) {
                 ValueAnimator va = ofFloat(1, 0);
-                va.setDuration(500);
+                va.setDuration(circleToTextDuration);
                 va.addUpdateListener(new CircleAndResultCircleAlphaAnimatorUpdateListener());
                 va.addListener(new ShowProgressBarOnFinishAnimationListener());
                 va.start();
@@ -244,7 +254,7 @@ public class LoadingButton extends FrameLayout {
                     (originalResultTextX - circleHalfWidth) + 56;
 
             ValueAnimator va = ofFloat(0, 1);
-            va.setDuration(500);
+            va.setDuration(circleToTextDuration);
             va.addListener(new ResultToFinalStateAnimatorListener());
             va.addUpdateListener(new MoveResultTextAndCircleAnimatorUpdateListener());
             va.start();
